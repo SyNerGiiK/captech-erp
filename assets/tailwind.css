@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* tokens et couches custom */
+@import "./tokens.css";
+@import "./components.css";
+@import "./utilities.css";
+
+:root { --sidebar-w: 20rem; }
+
+@media (min-width: 768px){
+  #sidebar { width: var(--sidebar-w) !important; }
+}

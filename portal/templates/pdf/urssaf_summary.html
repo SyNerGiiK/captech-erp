@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
+    h1 { font-size: 16px; }
+    table { width:100%; border-collapse: collapse; }
+    td, th { border:1px solid #ddd; padding:6px; }
+    .muted { color:#666; font-size:11px; }
+  </style>
+</head>
+<body>
+  <h1>Déclaration URSSAF — Synthèse période</h1>
+  <p><strong>Entreprise :</strong> {{ company.name }}</p>
+  <p><strong>Période :</strong> {{ period_start }} → {{ period_end }}</p>
+  <table>
+    <tr><th>CA déclaré (période)</th><td>{{ period_ca }} €</td></tr>
+    <tr><th>Taux applicable (activité)</th><td>{{ urssaf_rate_label }}</td></tr>
+    <tr><th>Cotisations estimées</th><td><strong>{{ contrib }} €</strong></td></tr>
+  </table>
+
+  <p class="muted">
+    Taux URSSAF indicatifs issus de la fiche « Cotisations sociales d’un micro-entrepreneur »
+    (Entreprendre.Service-Public, vérifiée le 19/09/2025). Les montants sont donnés à titre informatif,
+    sans valeur contractuelle. Veuillez vérifier vos éléments sur votre espace URSSAF avant dépôt. 
+  </p>
+</body>
+</html>

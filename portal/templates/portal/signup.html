@@ -1,0 +1,37 @@
+{% extends "portal/base.html" %}
+{% block title %}Créer un compte - CapTech ERP{% endblock %}
+{% block page_title %}Créer un compte{% endblock %}
+{% block content %}
+<div class="max-w-xl">
+  <div class="card p-6">
+    <form method="post" class="space-y-3">
+      {% csrf_token %}
+      <div>
+        <label class="text-sm">Nom de l'entreprise</label>
+        <input class="w-full rounded border-slate-300" type="text" name="company_name" value="{{ form.company_name.value|default_if_none:'' }}" required>
+      </div>
+      <div>
+        <label class="text-sm">Email</label>
+        <input class="w-full rounded border-slate-300" type="email" name="email" value="{{ form.email.value|default_if_none:'' }}" required>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm">Identifiant</label>
+          <input class="w-full rounded border-slate-300" type="text" name="username" value="{{ form.username.value|default_if_none:'' }}" required>
+        </div>
+        <div>
+          <label class="text-sm">Mot de passe</label>
+          <input class="w-full rounded border-slate-300" type="password" name="password" required>
+        </div>
+      </div>
+      {% if form.errors %}
+        <div class="rounded bg-danger-50 text-danger-900 px-3 py-2 text-sm">{{ form.errors }}</div>
+      {% endif %}
+      <div class="flex gap-2">
+        <button class="btn btn-primary">Créer mon compte</button>
+        <a class="btn btn-outline" href="/">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

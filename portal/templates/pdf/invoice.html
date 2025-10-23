@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+  body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; color:#111; }
+  h1 { font-size: 20px; margin:0 0 8px 0; }
+  .muted { color:#666; }
+  .table { width:100%; border-collapse: collapse; margin-top:10px;}
+  .table th, .table td { border:1px solid #ccc; padding:6px; }
+  .right { text-align:right; }
+  .small { font-size: 11px; }
+</style></head>
+<body>
+  <table width="100%"><tr>
+    <td>
+      <h1>Facture {{ q.number }}</h1>
+      <div class="muted">Émis le {{ q.issue_date }}{% if q.valid_until %} • Valable jusqu'au {{ q.valid_until }}{% endif %}</div>
+      <div class="small muted">{{ q.company.name }} — {{ q.company.email }}</div>
+    </td>
+    <td class="right">
+      <strong>Client</strong><br>
+      {{ q.customer.name }}<br>
+      {{ q.customer.billing_address|linebreaksbr }}<br>
+      {% if q.customer.vat_number %}TVA: {{ q.customer.vat_number }}{% endif %}
+    </td>
+  </tr></table>
+
+  <table class="table">
+    <thead><tr><th>Désignation</th><th class="right">Qté</th><th class="right">PU HT</th><th class="right">TVA %</th><th class="right">Remise %</th><th class="right">Total HT</th></tr></thead>
+    <tbody>
+    {% for it in q.items.all %}
+      {% with ht=(it.quantity|floatformat:2|floatformat) %}
+      <tr>
+        <td>{{ it.description }}</td>
+        <td class="right">{{ it.quantity }}</td>
+        <td class="right">{{ it.unit_price_cents|floatformat:0 }} cts</td>
+        <td class="right">{{ it.vat_rate }}</td>
+        <td class="right">{{ it.discount_pct }}</td>
+        <td class="right">
+          {% with line=((it.unit_price_cents|add:0)/100.0)*it.quantity*(1-(it.discount_pct/100.0)) %}
+          {{ line|floatformat:2 }} €
+          {% endwith %}
+        </td>
+      </tr>
+      {% endwith %}
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <table width="100%" style="margin-top:10px;"><tr>
+    <td></td>
+    <td width="40%">
+      <table class="table">
+        <tr><th>Sous-total HT</th><td class="right">{{ subtotal|floatformat:0 }} cts</td></tr>
+        <tr><th>TVA</th><td class="right">{{ tax|floatformat:0 }} cts</td></tr>
+        <tr><th>Total TTC</th><td class="right">{{ total|floatformat:0 }} cts</td></tr>
+      </table>
+    </td>
+  </tr></table>
+
+  {% if q.notes %}<p class="small muted">Notes: {{ q.notes }}</p>{% endif %}
+  <p class="small muted">Numérotation chronologique continue. Prix en EUR. En cas d'auto-entreprise: “TVA non applicable, art. 293 B du CGI”.</p>
+</body></html>

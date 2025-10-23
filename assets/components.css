@@ -1,0 +1,28 @@
+/* Cartes / panneaux */
+.card {
+  @apply rounded-xl bg-white;
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+}
+
+/* Boutons */
+.btn {
+  @apply inline-flex items-center justify-center font-medium transition border rounded-xl px-3.5 py-2.5;
+}
+.btn-primary   { @apply text-white border-transparent; background: var(--brand); }
+.btn-outline   { @apply text-[var(--brand)] border-[var(--brand)] bg-transparent; }
+.btn-ghost     { @apply text-[var(--brand)]; background: transparent; }
+
+/* Badges */
+.badge         { @apply inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full; }
+.badge-green   { @apply text-white; background: var(--success); }
+.badge-amber   { @apply text-white; background: var(--warning); }
+.badge-red     { @apply text-white; background: var(--danger); }
+
+/* Sidebar link */
+.nav-link      { @apply flex items-center gap-3 px-3 py-2 rounded-lg text-[15px] transition; color: var(--text); }
+.nav-link:hover{ @apply bg-blue-50; }
+.nav-link.active { background: rgba(37,99,235,.12); color: var(--brand); }
+
+/* Titre de page */
+.page-title { @apply text-xl font-semibold; color: var(--text); }

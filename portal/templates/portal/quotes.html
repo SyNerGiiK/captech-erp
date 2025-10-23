@@ -1,0 +1,36 @@
+{% extends "portal/base.html" %}{% load portal_extras %}
+{% block title %}Devis - CapTech ERP{% endblock %}{% block page_title %}Devis{% endblock %}
+{% block content %}
+{% if company %}
+  <div class="mb-4 flex items-center justify-between">
+    <div>Entreprise : <strong>{{ company.name }}</strong></div>
+    <a class="btn btn-primary" href="{% url 'portal:quote_new' %}">Nouveau devis</a>
+  </div>
+  <div class="card">
+    <div class="px-4 py-3 border-b border-slate-200 dark:border-ink-700 font-medium">Liste</div>
+    <div class="p-4 overflow-x-auto">
+      {% if items %}
+      <table class="w-full text-sm">
+        <thead class="text-ink-500"><tr><th>N°</th><th>Client</th><th>Statut</th><th>Date</th><th></th></tr></thead>
+        <tbody class="divide-y divide-slate-200 dark:divide-ink-700">
+          {% for q in items %}
+          <tr class="hover:bg-ink-50/40 dark:hover:bg-ink-800/50">
+            <td class="py-2 font-medium">{{ q.number }}</td>
+            <td class="py-2">{{ q.customer.name }}</td>
+            <td class="py-2">{{ q.get_status_display }}</td>
+            <td class="py-2">{{ q.issue_date }}</td>
+            <td class="py-2 text-right">
+              <a class="underline" href="{% url 'portal:quote_edit' q.pk %}">éditer</a> ·
+              <a class="underline" href="{% url 'portal:quote_pdf' q.pk %}" target="_blank">PDF</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<div class="text-sm opacity-70 p-2">Aucun devis.</div>{% endif %}
+    </div>
+  </div>
+{% else %}
+  <div class="card p-6">Aucune entreprise associée.</div>
+{% endif %}
+{% endblock %}

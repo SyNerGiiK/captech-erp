@@ -1,0 +1,31 @@
+:root {
+  /* dimensions */
+  --sidebar-w: 20rem;          /* ⇐ largeur de la sidebar */
+  --page-gutter: 16px;
+
+  /* rayons, ombres */
+  --radius: 14px;
+
+  /* couleurs (thème clair) */
+  --bg: #f6f8fb;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+
+  --brand: #2563eb;    /* bleu principal */
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger:  #ef4444;
+
+  /* accents */
+  --card-shadow: 0 8px 30px rgba(0,0,0,.06);
+}
+
+/* Thème sombre – si tu le veux plus tard */
+.dark {
+  --bg: #0f172a;
+  --surface: #0b1220;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --card-shadow: 0 8px 30px rgba(0,0,0,.35);
+}

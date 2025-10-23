@@ -1,0 +1,224 @@
+{% extends "portal/base.html" %}
+{% load portal_extras %}
+{% block title %}Kanban Tickets - CapTech ERP{% endblock %}
+{% block page_title %}Kanban{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-semibold">Kanban Tickets</h1>
+  <div class="flex gap-2">
+    <a class="btn btn-dark" href="{% url 'portal:tickets' %}">Vue liste</a>
+    <a class="btn btn-primary" href="{% url 'portal:ticket_create' %}">Nouveau ticket</a>
+  </div>
+</div>
+
+{% if company %}
+  <p class="mb-4">Entreprise : <strong>{{ company.name }}</strong></p>
+
+  <div id="kanban" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    {% for key, title, color in columns %}
+      <section class="kanban-col rounded-xl2 bg-white border border-slate-200 shadow-card overflow-hidden transition-all"
+               data-status="{{ key }}"
+               ondragover="handleDragOver(event)"
+               ondragenter="handleDragEnter(event)"
+               ondragleave="handleDragLeave(event)"
+               ondrop="handleDrop(event)">
+        <div class="kanban-head px-4 py-2 text-white {{ key|status_head_class }} {{ heat.key }}" data-status="{{ key }}" data-base="{{ key|status_head_class }}">
+          <div class="flex items-center justify-between">
+            <span class="font-medium">{{ title }}</span>
+            <span class="text-[11px] bg-black/15 rounded px-2 py-0.5 font-medium" data-count="{{ key }}">{{ counts.key }}</span>
+          </div>
+        </div>
+        <div class="kanban-list p-3 space-y-3 min-h-[120px]">
+          {% for t in cols|get_item:key %}
+          <article class="kanban-card rounded-xl border border-slate-200 p-3 bg-white shadow-sm hover:shadow-card transition"
+                   draggable="true"
+                   ondragstart="handleDragStart(event)"
+                   ondragend="handleDragEnd(event)"
+                   data-id="{{ t.id }}">
+            <div class="font-medium">
+              <a class="hover:underline" href="{% url 'portal:ticket_detail' t.pk %}">#{{ t.id }} — {{ t.title }}</a>
+            </div>
+            <div class="text-xs mt-1 opacity-70">créé {{ t.created_at }}</div>
+            <div class="mt-2">
+              <span class="chip {{ t.priority|priority_badge_class }}">Priorité: {{ t.get_priority_display }}</span>
+            </div>
+          </article>
+          {% empty %}
+            <div class="kanban-empty text-sm text-slate-500 italic">—</div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+
+<script>
+  // ----- CSRF -----
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+  const CSRF = getCookie('csrftoken');
+
+  // ----- drag state -----
+  let draggedId = null, dragGhost = null;
+  let originParent = null, originNextSibling = null, originStatus = null;
+
+  function updateCountersAndHeat() {
+    const heads = document.querySelectorAll('.kanban-head');
+    let total = 0;
+    const counts = {};
+    for (const head of heads) {
+      const status = head.dataset.status;
+      const list = head.parentElement.querySelector('.kanban-list');
+      const n = list.querySelectorAll('.kanban-card').length;
+      counts[status] = n; total += n;
+      const badge = head.querySelector(`[data-count="${status}"]`);
+      if (badge) badge.textContent = n;
+    }
+    total = Math.max(1, total);
+    for (const head of heads) {
+      const status = head.dataset.status;
+      const base = head.dataset.base;
+      head.className = `kanban-head px-3 py-2 text-white ${base}`;
+      const r = counts[status] / total;
+      if (r === 0) head.classList.add("opacity-50");
+      else if (r <= 0.25) head.classList.add("opacity-70");
+      else if (r <= 0.5) head.classList.add("opacity-80");
+      else if (r <= 0.75) head.classList.add("opacity-90");
+    }
+  }
+  function showToast(msg, type="info"){ if (window.toast) toast(msg, type); else alert(msg); }
+
+  function insertAtPointer(list, card, clientY) {
+    const siblings = Array.from(list.querySelectorAll('.kanban-card')).filter(el => el !== card);
+    let before = null;
+    for (const el of siblings) {
+      const rect = el.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (clientY < midY) { before = el; break; }
+    }
+    if (before) list.insertBefore(card, before); else list.appendChild(card);
+  }
+
+  function handleDragStart(e) {
+    const card = e.currentTarget;
+    draggedId = card.dataset.id;
+    originParent = card.parentElement;
+    originNextSibling = card.nextElementSibling;
+    originStatus = card.closest('.kanban-col')?.dataset.status || null;
+
+    card.classList.add("opacity-60","ring-2","ring-slate-300");
+
+    dragGhost = card.cloneNode(true);
+    dragGhost.style.position = "absolute";
+    dragGhost.style.top = "-9999px";
+    dragGhost.style.width = card.offsetWidth + "px";
+    dragGhost.classList.add("rotate-1","shadow-lg","bg-white");
+    document.body.appendChild(dragGhost);
+    e.dataTransfer.setDragImage(dragGhost, 10, 10);
+
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', draggedId);
+  }
+  function handleDragEnd(e) {
+    const card = document.querySelector(`[data-id="${draggedId}"]`);
+    if (card) card.classList.remove("opacity-60","ring-2","ring-slate-300");
+    if (dragGhost && dragGhost.parentNode) dragGhost.parentNode.removeChild(dragGhost);
+    dragGhost = null; draggedId = null;
+  }
+  function handleDragEnter(e){ const s=e.currentTarget.closest('.kanban-col'); if (s) s.classList.add("ring-2","ring-slate-400","ring-offset-2","ring-offset-slate-100");}
+  function handleDragLeave(e){ const s=e.currentTarget.closest('.kanban-col'); if (s) s.classList.remove("ring-2","ring-slate-400","ring-offset-2","ring-offset-slate-100");}
+  function handleDragOver(e){
+    e.preventDefault();
+    const section = e.currentTarget.closest('.kanban-col');
+    const list = section.querySelector('.kanban-list');
+    const card = document.querySelector(`[data-id="${draggedId}"]`);
+    if (list && card) insertAtPointer(list, card, e.clientY);
+  }
+
+  async function postMove(id, toStatus){
+    const resp = await fetch("{% url 'portal:tickets_kanban_move' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": CSRF },
+      body: new URLSearchParams({ id, to: toStatus })
+    });
+    if (!resp.ok) throw new Error("http_" + resp.status);
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || "unknown_error");
+    return data;
+  }
+
+  async function postReorder(status, listEl){
+    // collecte les IDs de la colonne
+    const ids = Array.from(listEl.querySelectorAll('.kanban-card')).map(el => el.dataset.id);
+    const resp = await fetch("{% url 'portal:tickets_kanban_reorder' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": CSRF, "Content-Type":"application/json" },
+      body: JSON.stringify({ status, ids })
+    });
+    if (!resp.ok) throw new Error("http_" + resp.status);
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || "unknown_error");
+    return data;
+  }
+
+  async function handleDrop(e) {
+    e.preventDefault();
+    const section = e.currentTarget.closest('.kanban-col');
+    if (!section) return;
+    section.classList.remove("ring-2","ring-slate-400","ring-offset-2","ring-offset-slate-100");
+
+    const newStatus = section.dataset.status;
+    if (!draggedId || !newStatus) return;
+
+    const card = document.querySelector(`[data-id="${draggedId}"]`);
+    const list = section.querySelector('.kanban-list');
+
+    // si drop direct sans over
+    if (card && list && !card.parentElement.isSameNode(list)) list.prepend(card);
+
+    // MAJ visuelle immédiate
+    updateCountersAndHeat();
+
+    try {
+      if (originStatus && originStatus !== newStatus) {
+        // 1. changer la colonne en base
+        await postMove(draggedId, newStatus);
+      }
+      // 2. persister l'ordre de la colonne cible
+      await postReorder(newStatus, list);
+
+      // feedback succès
+      if (card) {
+        card.classList.add("ring-2","ring-emerald-400","bg-emerald-50");
+        setTimeout(() => card.classList.remove("ring-2","ring-emerald-400","bg-emerald-50"), 500);
+      }
+      showToast(`Ticket #${draggedId} → ${newStatus}`, "success");
+
+      originParent = null; originNextSibling = null; originStatus = null;
+    } catch (err) {
+      // rollback si erreur
+      if (originParent) {
+        if (originNextSibling && originNextSibling.parentNode === originParent) {
+          originParent.insertBefore(card, originNextSibling);
+        } else {
+          originParent.appendChild(card);
+        }
+      }
+      updateCountersAndHeat();
+      if (card) {
+        card.classList.add("ring-2","ring-rose-400","bg-rose-50");
+        setTimeout(() => card.classList.remove("ring-2","ring-rose-400","bg-rose-50"), 700);
+      }
+      showToast("Erreur déplacement: " + err.message, "error");
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', updateCountersAndHeat);
+</script>
+
+{% else %}
+  <p>Aucune entreprise associée à votre compte.</p>
+{% endif %}
+{% endblock %}

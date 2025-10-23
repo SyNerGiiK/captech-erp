@@ -1,0 +1,17 @@
+/* Layout lié à la sidebar – une seule source de vérité */
+@media (min-width: 768px) {
+  #sidebar {
+    width: var(--sidebar-w) !important;
+  }
+  main {
+    margin-left: var(--sidebar-w) !important;
+  }
+}
+
+/* Raccourcis utiles */
+.surface { background: var(--surface); }
+.bg-app  { background: var(--bg); }
+
+/* Masquer les libellés quand sidebar repliée (si tu actives le toggle plus tard) */
+.sidebar-collapsed #sidebar .nav-label { display: none; }
+.sidebar-collapsed main { margin-left: 64px; } /* repli */

@@ -1,0 +1,48 @@
+{% extends "portal/base.html" %}
+{% block title %}Devis - CapTech ERP{% endblock %}{% block page_title %}Devis {{ obj.number }}{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <form method="post" class="lg:col-span-2 card p-6">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {{ form.customer.label_tag }} {{ form.customer }}
+      {{ form.issue_date.label_tag }} {{ form.issue_date }}
+      {{ form.valid_until.label_tag }} {{ form.valid_until }}
+      {{ form.status.label_tag }} {{ form.status }}
+      {{ form.currency.label_tag }} {{ form.currency }}
+    </div>
+    <div class="mt-4">
+      <label class="block text-sm mb-1">Notes</label>
+      {{ form.notes }}
+    </div>
+    <div class="mt-6">
+      <h3 class="font-semibold mb-2">Lignes</h3>
+      {{ formset.management_form }}
+      <div class="space-y-3">
+        {% for f in formset.forms %}
+        <div class="rounded border p-3">
+          {{ f.id }} 
+          <div class="grid md:grid-cols-2 gap-3">
+            {{ f.description.label_tag }} {{ f.description }}
+            {{ f.quantity.label_tag }} {{ f.quantity }}
+            {{ f.unit_price_cents.label_tag }} {{ f.unit_price_cents }}
+            {{ f.vat_rate.label_tag }} {{ f.vat_rate }}
+            {{ f.discount_pct.label_tag }} {{ f.discount_pct }}
+          </div>
+          {% if f.DELETE %}<label class="text-sm">{{ f.DELETE }} Supprimer</label>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="mt-6 flex gap-2">
+      <button class="btn btn-primary">Enregistrer</button>
+      <a href="{% url 'portal:quotes' %}" class="btn btn-outline">Annuler</a>
+    </div>
+  </form>
+  <div class="card p-6">
+    <div class="text-sm opacity-80">Numéro</div>
+    <div class="text-xl font-semibold">{{ obj.number }}</div>
+    <div class="mt-4 text-sm opacity-80">Utilisez le bouton Enregistrer pour mettre à jour les lignes.</div>
+  </div>
+</div>
+{% endblock %}

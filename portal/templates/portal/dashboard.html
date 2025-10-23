@@ -1,0 +1,75 @@
+{% extends "portal/base.html" %}
+{% load portal_extras %}
+{% block title %}Dashboard - CapTech ERP{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+{% if company %}
+  <div class="mb-6 text-ink-600">Entreprise : <span class="font-semibold text-ink-900">{{ company.name }}</span></div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="card p-4">
+      <div class="text-[11px] text-ink-500">Tickets</div>
+      <div class="flex items-end justify-between">
+        <div class="text-2xl font-semibold">{{ stats.total }}</div>
+        <div class="chip bg-brand-50 text-brand-700">Total</div>
+      </div>
+    </div>
+    <div class="card p-4">
+      <div class="text-[11px] text-ink-500">Ouverts</div>
+      <div class="flex items-end justify-between">
+        <div class="text-2xl font-semibold">{{ stats.open }}</div>
+        <div class="chip bg-brand-50 text-brand-700">Open</div>
+      </div>
+    </div>
+    <div class="card p-4">
+      <div class="text-[11px] text-ink-500">En cours</div>
+      <div class="flex items-end justify-between">
+        <div class="text-2xl font-semibold">{{ stats.in_progress }}</div>
+        <div class="chip bg-indigo-50 text-indigo-700">WIP</div>
+      </div>
+    </div>
+    <div class="card p-4">
+      <div class="text-[11px] text-ink-500">En attente</div>
+      <div class="flex items-end justify-between">
+        <div class="text-2xl font-semibold">{{ stats.waiting }}</div>
+        <div class="chip bg-amber-50 text-amber-900">Hold</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <section class="card">
+      <div class="px-4 py-3 border-b border-slate-200 font-medium">Tickets récents</div>
+      <div class="p-4">
+        {% if recent_tickets %}
+          <ul class="divide-y divide-slate-200">
+            {% for t in recent_tickets %}
+              <li class="py-3 flex items-center justify-between">
+                <div>
+                  <a class="font-medium hover:underline" href="{% url 'portal:ticket_detail' t.pk %}">#{{ t.id }} — {{ t.title }}</a>
+                  <div class="text-[12px] text-ink-500">Statut: {{ t.get_status_display }} • {{ t.created_at }}</div>
+                </div>
+                <span class="chip {{ t.priority|priority_badge_class }}">{{ t.get_priority_display }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-sm text-ink-500">Aucun ticket.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="px-4 py-3 border-b border-slate-200 font-medium">Factures récentes</div>
+      <div class="p-4 text-sm text-ink-500">Aucune facture.</div>
+    </section>
+  </div>
+{% else %}
+  <div class="card p-6">
+    <div class="font-medium mb-1">Aucune entreprise associée</div>
+    <div class="text-ink-600">Contactez le support.</div>
+  </div>
+{% endif %}
+
+{% endblock %}

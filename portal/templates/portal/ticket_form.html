@@ -1,0 +1,28 @@
+{% extends "portal/base.html" %}
+{% block title %}Nouveau ticket - CapTech ERP{% endblock %}
+{% block content %}
+<h1>Nouveau ticket</h1>
+{% if company %}
+  <p>Entreprise : <strong>{{ company.name }}</strong></p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <label for="{{ form.title.id_for_label }}">{{ form.fields.title.label }}</label>
+    {{ form.title.errors }}
+    {{ form.title }}
+
+    <label for="{{ form.description.id_for_label }}">{{ form.fields.description.label }}</label>
+    {{ form.description.errors }}
+    {{ form.description }}
+
+    <label for="{{ form.priority.id_for_label }}">{{ form.fields.priority.label }}</label>
+    {{ form.priority.errors }}
+    {{ form.priority }}
+
+    <button class="btn" type="submit">Créer</button>
+    <a class="btn btn-light" href="{% url 'portal:tickets' %}">Annuler</a>
+  </form>
+{% else %}
+  <p>Aucune entreprise associée à votre compte.</p>
+{% endif %}
+{% endblock %}

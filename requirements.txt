@@ -1,0 +1,6 @@
+django==5.0.7
+djangorestframework==3.15.2
+django-filter==24.3
+xhtml2pdf==0.2.13
+reportlab==4.0.4
+pillow>=10.0.0

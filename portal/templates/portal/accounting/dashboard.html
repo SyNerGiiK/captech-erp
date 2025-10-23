@@ -1,0 +1,112 @@
+{% extends "portal/base.html" %}
+{% block title %}Comptabilité{% endblock %}
+{% block content %}
+<div class="page">
+  <h1 class="page-title">Comptabilité — {{ company.name }}</h1>
+
+  <!-- Bandeau statut -->
+  <div class="card shadow-md mb-4">
+    <div class="card-body">
+      <strong>Statut :</strong> {{ company.display_status }} ·
+      <strong>Périodicité URSSAF :</strong> {{ company.get_urssaf_frequency_display }} ·
+      <strong>Activité :</strong> {{ company.get_activity_kind_display }}
+    </div>
+  </div>
+
+  <!-- Synthèse -->
+  <div class="grid grid-3 gap">
+    <div class="card shadow-md">
+      <div class="card-header">CA cumulé {{ year }}</div>
+      <div class="card-body">
+        <div class="kpi">{{ ca_ytd }} €</div>
+        <div>Plafond micro : {{ micro_cap }} €</div>
+        <div class="progress">
+          <div class="bar" style="width: '{{ micro_progress }}%'"></div>
+        </div>
+        <div class="muted">{{ micro_progress }} % du plafond</div>
+      </div>
+    </div>
+
+    <div class="card shadow-md">
+      <div class="card-header">Franchise en base de TVA</div>
+      <div class="card-body">
+        <div>Seuil base : <strong>{{ vat_base }} €</strong></div>
+        <div>Seuil tolérance : <strong>{{ vat_tol }} €</strong></div>
+        {% if ca_ytd >= vat_base %}
+          <div class="alert warn mt-2">
+            Seuil de base atteint — surveille la tolérance. (Réf. Service-Public)
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card shadow-md">
+      <div class="card-header">URSSAF — période en cours</div>
+      <div class="card-body">
+        <div>Période: {{ period_start }} → {{ period_end }}</div>
+        <div>CA période : <strong>{{ period_ca }} €</strong></div>
+        <div>Taux estimatif : <strong>{{ urssaf_rate_label }}</strong></div>
+        <div>Cotisations estimées : <strong>{{ contrib }} €</strong></div>
+        <a class="btn btn-primary mt-2" href="{% url 'portal:urssaf_pdf' %}">Générer le PDF URSSAF</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graphique -->
+  <div class="card shadow-md mt-4">
+    <div class="card-header">Progression du CA ({{ year }})</div>
+    <div class="card-body">
+      <canvas id="caChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js CDN simple -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(async function(){
+  // On construit un petit dataset par mois côté client (simple : CA_YTD linéaire placeholder).
+  const labels = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sep","Oct","Nov","Déc"];
+  // Remplace si besoin par un endpoint JSON plus précis
+  const ytd = Number({{ ca_ytd|default:0 }});
+  const monthIndex = (new Date()).getMonth();
+  const data = [];
+  for (let i=0;i<12;i++){
+    data.push(i<=monthIndex ? Math.round(ytd*(i+1)/(monthIndex+1)) : null);
+  }
+  const ctx = document.getElementById('caChart');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'CA cumulé',
+        data,
+      },{
+        label: 'Plafond micro',
+        data: labels.map(_=> {{ micro_cap|default:0 }}),
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+})();
+</script>
+
+<style>
+.grid { display:grid; gap:1rem; }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.card { background:#fff; border-radius:12px; border:1px solid #e9eef5; }
+.card-header { font-weight:600; padding:0.75rem 1rem; border-bottom:1px solid #eef2f7; }
+.card-body { padding:1rem; }
+.shadow-md { box-shadow:0 6px 24px rgba(0,40,120,.07); }
+.kpi { font-size:1.6rem; font-weight:700; }
+.muted { color:#6b7280; font-size:.9rem; }
+.progress { background:#f3f4f6; border-radius:8px; height:10px; margin-top:.5rem; }
+.progress .bar { background:#2563eb; height:10px; border-radius:8px; }
+.alert.warn { background:#fff8e1; border:1px solid #fde68a; padding:.5rem .75rem; border-radius:8px; }
+.page-title { margin-bottom:.5rem }
+.btn { display:inline-block; padding:.5rem .75rem; border-radius:8px; text-decoration:none; }
+.btn-primary { background:#2563eb; color:#fff; }
+@media (max-width: 980px){ .grid-3 { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}

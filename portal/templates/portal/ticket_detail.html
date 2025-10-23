@@ -1,0 +1,78 @@
+{% extends "portal/base.html" %}
+{% block title %}Ticket #{{ ticket.id }} - CapTech ERP{% endblock %}
+{% block content %}
+<h1>Ticket #{{ ticket.id }} — {{ ticket.title }}</h1>
+<p>Entreprise : <strong>{{ company.name }}</strong></p>
+
+<h2>Informations</h2>
+<ul>
+  <li>Statut : <strong>{{ ticket.get_status_display }}</strong></li>
+  <li>Priorité : <strong>{{ ticket.get_priority_display }}</strong></li>
+  <li>Créé par : {{ ticket.created_by|default:"-" }} — {{ ticket.created_at }}</li>
+  <li>Assigné à : {{ ticket.assigned_to|default:"-" }}</li>
+</ul>
+
+<h3>Modifier statut / priorité</h3>
+<form method="post">
+  {% csrf_token %}
+  {{ status_form.non_field_errors }}
+  <div>
+    <label for="{{ status_form.status.id_for_label }}">{{ status_form.fields.status.label }}</label>
+    {{ status_form.status.errors }}
+    {{ status_form.status }}
+  </div>
+  <div>
+    <label for="{{ status_form.priority.id_for_label }}">{{ status_form.fields.priority.label }}</label>
+    {{ status_form.priority.errors }}
+    {{ status_form.priority }}
+  </div>
+  <button class="btn" type="submit" name="status-submit">Mettre à jour</button>
+</form>
+
+<h2>Commentaires</h2>
+<ul>
+  {% for c in ticket.comments.all %}
+    <li><strong>{{ c.author|default:"(système)" }}</strong> — {{ c.created_at }}<br>{{ c.message|linebreaksbr }}</li>
+  {% empty %}
+    <li>(aucun commentaire)</li>
+  {% endfor %}
+</ul>
+<form method="post">
+  {% csrf_token %}
+  {{ comment_form.non_field_errors }}
+  <label for="{{ comment_form.message.id_for_label }}">{{ comment_form.fields.message.label }}</label>
+  {{ comment_form.message.errors }}
+  {{ comment_form.message }}
+  <button class="btn" type="submit" name="comment-submit">Ajouter un commentaire</button>
+</form>
+
+<h2>Pièces jointes</h2>
+<ul>
+  {% for a in ticket.attachments.all %}
+    <li><a href="{{ a.file.url }}" target="_blank">{{ a.file.name|cut:"attachments/" }}</a> — {{ a.uploaded_by|default:"-" }} — {{ a.created_at }}</li>
+  {% empty %}
+    <li>(aucune pièce jointe)</li>
+  {% endfor %}
+</ul>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ attachment_form.non_field_errors }}
+  <label for="{{ attachment_form.file.id_for_label }}">{{ attachment_form.fields.file.label }}</label>
+  {{ attachment_form.file.errors }}
+  {{ attachment_form.file }}
+  <button class="btn" type="submit" name="attach-submit">Téléverser</button>
+</form>
+
+<h2>Historique</h2>
+<ul>
+  {% for e in events %}
+    <li><strong>{{ e.created_at }}</strong> — <em>{{ e.get_type_display }}</em> — {{ e.message }} {% if e.actor %}(<small>par {{ e.actor }}</small>){% endif %}</li>
+  {% empty %}
+    <li>(aucun événement)</li>
+  {% endfor %}
+</ul>
+
+<p style="margin-top:16px;">
+  <a class="btn btn-light" href="{% url 'portal:tickets' %}">← Retour à la liste</a>
+</p>
+{% endblock %}
